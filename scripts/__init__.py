@@ -1,0 +1,1 @@
+"""Scripts de apoio ao projeto, como as validações das séries."""

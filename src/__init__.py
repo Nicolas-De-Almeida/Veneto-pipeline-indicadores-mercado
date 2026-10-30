@@ -1,0 +1,1 @@
+"""Código do pipeline de indicadores de mercado (extração, transformação e carga)."""
