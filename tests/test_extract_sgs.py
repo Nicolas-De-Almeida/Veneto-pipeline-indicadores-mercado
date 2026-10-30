@@ -5,8 +5,7 @@ from datetime import date
 import pytest
 import requests
 
-from src.extract_sgs import baixar_serie_sgs, calcular_periodo, montar_parametros
-
+from src.extract_sgs import ( ErroPedidoRecusado, baixar_serie_sgs, calcular_periodo,montar_parametros )
 
 class RespostaFalsa:
     """Imita a resposta do `requests` com os dados que quisermos."""
@@ -89,3 +88,26 @@ def test_janela_maior_que_dez_anos_e_recusada():
 def test_data_inicial_posterior_a_final_e_recusada():
     with pytest.raises(ValueError):
         baixar_serie_sgs(1, date(2026, 2, 1), date(2026, 1, 1))
+
+
+def test_datas_iguais_sao_recusadas():
+    # A API do SGS responde HTTP 400 quando data_final não é maior que data_inicial.
+    with pytest.raises(ValueError):
+        baixar_serie_sgs(1, date(2026, 10, 26), date(2026, 10, 26))
+
+
+def test_erro_4xx_nao_tenta_de_novo_e_mostra_o_motivo(monkeypatch):
+    chamadas = []
+
+    def get_falso(url, params=None, timeout=None):
+        chamadas.append(1)
+        return RespostaFalsa({"erro": "DataFinal deve ser maior que dataInicial."}, status=400)
+
+    monkeypatch.setattr("src.extract_sgs.requests.get", get_falso)
+    monkeypatch.setattr("src.extract_sgs.time.sleep", lambda segundos: None)
+
+    with pytest.raises(ErroPedidoRecusado) as excecao:
+        baixar_serie_sgs(1, date(2026, 1, 1), date(2026, 1, 31), tentativas=3)
+
+    assert len(chamadas) == 1  # não repetiu o pedido
+    assert "DataFinal deve ser maior" in str(excecao.value)
