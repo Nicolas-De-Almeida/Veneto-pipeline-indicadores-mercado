@@ -7,7 +7,7 @@ Como rodar (na raiz do projeto, com o .venv ativo):
     python3 -m scripts.validar_ptax
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 
@@ -41,10 +41,17 @@ def valores_batem(valor_sgs: float, valor_ptax: float, tolerancia: float = TOLER
 
 
 def buscar_sgs(data_br: str) -> float:
-    """Busca o dólar da série 1 numa data, usando o nosso extrator real."""
+    """Busca o dólar da série 1 numa data, usando o nosso extrator real.
+
+    A API do SGS exige data_final MAIOR que data_inicial (recusa janela de um
+    dia só). Por isso pedimos o dia anterior junto e filtramos a data certa.
+    """
     dia = datetime.strptime(data_br, "%d/%m/%Y").date()
-    tabela = baixar_serie_sgs(SERIES_SGS["dolar_ptax"], dia, dia)
-    return float(tabela.loc[0, "valor"])  # a API entrega texto; convertemos aqui
+    tabela = baixar_serie_sgs(SERIES_SGS["dolar_ptax"], dia - timedelta(days=1), dia)
+    if tabela.empty or data_br not in tabela["data"].values:
+        raise ValueError(f"A série 1 não tem valor em {data_br} (feriado ou fim de semana?)")
+    linha = tabela[tabela["data"] == data_br]
+    return float(linha.iloc[0]["valor"])  # a API entrega texto; convertemos aqui
 
 
 def buscar_ptax(data_br: str) -> float:
