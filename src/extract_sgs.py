@@ -44,16 +44,10 @@ def _motivo_da_api(resposta) -> str:
         return "sem detalhes"
 
 
-def baixar_serie_sgs(
-    codigo: int,
-    data_inicial: date,
-    data_final: date,
-    tentativas: int = 3,
-    espera: float = 2.0,
-) -> pd.DataFrame:
+def baixar_serie_sgs(codigo: int, data_inicial: date, data_final: date, tentativas: int = 3, espera: float = 2.0) -> pd.DataFrame:
     """Baixa uma série do SGS e devolve os dados BRUTOS (colunas data e valor, em texto).
 
-    Convertemos tipos só na etapa de transformação, para manter a extração simples.
+    Converte tipos só na etapa de transformação, para manter a extração simples.
 
     Tratamento de falhas:
     - Pedido recusado pela API (erro 4xx): falha na hora com o motivo dela,
