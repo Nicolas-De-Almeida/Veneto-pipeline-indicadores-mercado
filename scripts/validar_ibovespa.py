@@ -33,6 +33,24 @@ FECHAMENTOS_REFERENCIA = {
     date(2026, 10, 21): 206495.23,
     date(2026, 10, 22): 204120.12,
     date(2026, 10, 23): 205082.56,
+
+    # Dias com volume zero no Yahoo, conferidos na série histórica da B3
+    date(2022, 1, 5): 101005.64,
+    date(2022, 2, 4): 112244.94,
+    date(2022, 3, 2): 115173.61,
+    date(2022, 4, 19): 115056.66,
+    date(2023, 3, 20): 100922.89,
+    date(2023, 3, 23): 97926.34,
+    date(2023, 3, 24): 98829.27,
+    date(2023, 12, 26): 133532.92,
+    date(2024, 7, 1): 124718.07,
+}
+
+
+# Dias em que o Yahoo difere da B3 por mais que o arredondamento. Ficam fora da
+# lista acima para não esconder o problema: o script os mostra à parte.
+DIVERGENCIAS_CONHECIDAS = {
+    date(2023, 11, 10): 120568.14,  # o Yahoo entrega 120636 (cerca de 68 pontos a mais)
 }
 
 # O Yahoo entrega o fechamento arredondado em pontos inteiros e a referência
@@ -67,14 +85,25 @@ def comparar(tabela: pd.DataFrame, referencias: dict) -> list:
 
 def main() -> None:
     """Baixa o período das referências e imprime o veredito de cada data."""
-    datas = sorted(FECHAMENTOS_REFERENCIA)
+    todas = {**FECHAMENTOS_REFERENCIA, **DIVERGENCIAS_CONHECIDAS}
+    datas = sorted(todas)
     tabela = baixar_ibovespa(datas[0], datas[-1])
+
     todas_iguais = True
     for dia, valor, referencia, bateu in comparar(tabela, FECHAMENTOS_REFERENCIA):
         todas_iguais = todas_iguais and bateu
         print(f"{dia} | Yahoo: {valor} | Referência: {referencia} | {'IGUAIS' if bateu else 'DIFERENTES'}")
-    print("Ibovespa conferido." if todas_iguais else "ATENÇÃO: houve divergência, revisar.")
 
+    print("--- Divergências conhecidas ---")
+    for dia, valor, referencia, bateu in comparar(tabela, DIVERGENCIAS_CONHECIDAS):
+        diferenca = None if valor is None else round(valor - referencia, 2)
+        estado = "AGORA BATE (revisar esta lista)" if bateu else "CONTINUA DIVERGINDO"
+        print(f"{dia} | Yahoo: {valor} | B3: {referencia} | diferença: {diferenca} | {estado}")
+
+    if todas_iguais:
+        print("Ibovespa conferido, com as divergências conhecidas acima.")
+    else:
+        print("ATENÇÃO: houve divergência nova, revisar.")
 
 if __name__ == "__main__":
     main()
