@@ -12,3 +12,6 @@ ANOS_HISTORICO = 5
 
 # Endereço base da API do SGS; {codigo} é substituído pelo código da série.
 URL_SGS = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo}/dados"
+
+# Ticker do Ibovespa no Yahoo Finance (via biblioteca yfinance).
+TICKER_IBOVESPA = "^BVSP"
