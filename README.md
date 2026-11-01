@@ -7,6 +7,12 @@ Pipeline de dados (ETL) com indicadores do mercado financeiro brasileiro
 
 ---
 
+## Layout do dashboard
+
+![Preview](docs/wireframe.webp)
+
+---
+
 ## Decisões tomadas
 
 ### Validação dos códigos das séries (SGS)
