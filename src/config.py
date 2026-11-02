@@ -1,4 +1,5 @@
 from datetime import date
+from pathlib import Path
 
 """Configurações centrais do pipeline: códigos das séries e parâmetros."""
 
@@ -23,3 +24,6 @@ DIAS_UTEIS_ANO = 252
 
 # Dias em que o Yahoo difere da B3 (conferido manualmente): data -> fechamento B3.
 DIAS_DIVERGENTES_IBOVESPA = {date(2023, 11, 10): 120568.14} # hmm
+
+# Banco fica na raiz do projeto.
+CAMINHO_BANCO = Path(__file__).resolve().parent.parent / "data" / "mercado.db"
