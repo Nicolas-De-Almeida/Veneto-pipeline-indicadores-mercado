@@ -16,7 +16,7 @@ TABELAS_SGS = tuple(config.SERIES_SGS) # ('cdi', 'ipca', 'dolar_ptax')
 TABELA_IBOVESPA = "ibovespa"
 TABELAS = TABELAS_SGS + (TABELA_IBOVESPA,)
 
-def connectar(caminho=None) -> sqlite3.Connection:
+def conectar(caminho=None) -> sqlite3.Connection:
     """Abre (ou cria) o banco. Só usar ':memory:' para rodar os testes."""
     caminho = config.CAMINHO_BANCO if caminho is None else caminho
     if str(caminho) != ":memory:":

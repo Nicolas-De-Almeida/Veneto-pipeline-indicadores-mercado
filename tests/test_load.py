@@ -9,7 +9,7 @@ from src.transform import converter_serie_sgs, tratar_ibovespa
 
 @pytest.fixture
 def conn():
-    c = load.connectar(":memory:")
+    c = load.conectar(":memory:")
     load.criar_tabelas(c)
     yield c
     c.close()
@@ -117,9 +117,9 @@ def test_execucao_registrada(conn):
     assert load.ler_ultima_execucao(conn) == datetime(2026, 11, 4, 9, 0, 0)
 
 
-def test_connectar_cria_pasta_e_arquivo(tmp_path):
+def test_conectar_cria_pasta_e_arquivo(tmp_path):
     caminho = tmp_path / "subpasta" / "teste.db"
-    c = load.connectar(caminho)
+    c = load.conectar(caminho)
     load.criar_tabelas(c)
     c.close()
     assert caminho.exists()

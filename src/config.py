@@ -1,7 +1,8 @@
+"""Configurações centrais do pipeline: códigos das séries e parâmetros."""
+
 from datetime import date
 from pathlib import Path
 
-"""Configurações centrais do pipeline: códigos das séries e parâmetros."""
 
 # Códigos das séries do SGS (Banco Central).
 SERIES_SGS = {

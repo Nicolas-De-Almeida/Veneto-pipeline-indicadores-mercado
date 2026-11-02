@@ -10,10 +10,9 @@ from src.config import TICKER_IBOVESPA
 
 
 def _selecionar_colunas(tabela: pd.DataFrame) -> pd.DataFrame:
-    """Fica só com data, fechamento e volume, com nomes em português.
-    Mantemos o volume porque ele ajuda a identificar dias incompletos
-    (volume zero) na etapa de transformação.
-    """
+    """Mantem o volume para o dashboard. 
+    Oo volume do Yahoo as vezes não é o da B3, e 0 
+    significa (sem dado), não (dia incompleto)"""
     return pd.DataFrame(
         {
             "data": tabela.index,  # no yfinance a data fica no índice da tabela

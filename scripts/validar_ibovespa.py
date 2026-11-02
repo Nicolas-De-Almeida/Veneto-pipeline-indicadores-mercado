@@ -1,5 +1,5 @@
-"""Validação do Ibovespa do yfinance contra fechamentos divulgados na imprensa.
-
+"""Validação do Ibovespa do yfinance contra os fechamentos da série histórica da B3.
+ 
 Objetivo: conferir que o fechamento que o Yahoo Finance entrega bate com o
 fechamento oficial da B3 em algumas datas, como fiz com o dólar.
 
@@ -12,6 +12,7 @@ from datetime import date
 import pandas as pd
 
 from src.extract_ibovespa import baixar_ibovespa
+from src.config import DIAS_DIVERGENTES_IBOVESPA
 
 # Fechamentos de referência, em pontos, da série histórica do Ibovespa no site da B3 
 # (tabela "IBovespa - 2026"), conferidos manualmente em 31/10/2026.
@@ -48,10 +49,10 @@ FECHAMENTOS_REFERENCIA = {
 
 
 # Dias em que o Yahoo difere da B3 por mais que o arredondamento. Ficam fora da
-# lista acima para não esconder o problema: o script os mostra à parte.
-DIVERGENCIAS_CONHECIDAS = {
-    date(2023, 11, 10): 120568.14,  # o Yahoo entrega 120636 (cerca de 68 pontos a mais)
-}
+# lista acima para não esconder o problema, o script os mostra à parte. A lista 
+# está em config.py, a mesma que o pipeline usa para
+# marcar esses dias no banco; assim as duas nunca ficam diferentes.
+DIVERGENCIAS_CONHECIDAS = DIAS_DIVERGENTES_IBOVESPA
 
 # O Yahoo entrega o fechamento arredondado em pontos inteiros e a referência
 # tem duas casas decimais; por isso aceitamos diferença menor que 1 ponto.
