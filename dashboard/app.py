@@ -13,13 +13,14 @@ if str(RAIZ) not in sys.path:
     sys.path.insert(0, str(RAIZ))
 
 import inspect
-import os 
+import os
 
 import streamlit as st
 
 from dashboard import componentes, dados, graficos, tema
 from dashboard import formatos as fmt 
-from src import config, load 
+from src import config, load
+
 CAMINHO_LOGO = Path(__file__).resolve().parent / "assets" / "logo.png"
 
 _USA_WIDTH = "width" in inspect.signature(st.plotly_chart).parameters
@@ -66,27 +67,32 @@ def _seletor_periodo() -> None:
                  key="periodo", horizontal=True, label_visibility="collapsed")
 
 
+def _erro(css: str, mensagem: str) -> None:
+    """Mostra uma mensagem de erro (com o visual do dashboard) e interrompe a página."""
+    _html(css)
+    st.error(mensagem)
+    st.stop()
+
+
 def main() -> None:
     st.set_page_config(page_title="Indicadores de Mercado · Vêneto Family Office", layout="wide")
     # CSS em uma linha só, evita que o markdown interprete recuos/linhas em branco.
-    _html("<style>" + " ".join(l.strip() for l in tema.CSS.splitlines()) + "</style>")
+    css = "<style>" + tema.css_em_uma_linha() + "</style>"
 
     caminho = config.CAMINHO_BANCO
     if not caminho.exists():
-        st.error("Banco de dados não encontrado. Rode primeiro o pipeline: `python3 -m src.pipeline`")
-        st.stop()
+        _erro(css, "Banco de dados não encontrado. Rode primeiro o pipeline: `python3 -m src.pipeline`")
     brutos, ultima_execucao = _carregar(str(caminho), os.path.getmtime(caminho))
 
     # O botão de período aparece DEPOIS do cabeçalho, mas o cabeçalho precisa
-    # dos dados; por isso lê a escolha direto do session_state.
+    # dos dados; por isso lemos a escolha direto do session_state.
     periodo = st.session_state.get("periodo") or dados.PERIODO_PADRAO
     try:
         painel = dados.construir_painel(brutos, periodo, ultima_execucao)
     except ValueError as erro:
-        st.error(str(erro))
-        st.stop()
+        _erro(css, str(erro))
 
-    _html(componentes.cabecalho(painel, componentes.logo_base64(CAMINHO_LOGO)))
+    _html(css + componentes.cabecalho(painel, componentes.logo_base64(CAMINHO_LOGO)))
 
     esquerda, direita = st.columns([1, 1])
     with esquerda:
@@ -96,7 +102,7 @@ def main() -> None:
 
     _html(componentes.cartoes(painel.cartoes))
 
-    # Desempenho comparado 
+    # Desempenho comparado
     with _caixa():
         _html(componentes.cabecalho_painel(
             "DESEMPENHO COMPARADO", "Quanto rendeu R$ 100",
@@ -155,7 +161,8 @@ def main() -> None:
 
     # Dados completos
     with st.expander("Ver e baixar os dados do período"):
-        st.dataframe(painel.tabela, hide_index=True)
+        _html('<div class="vf-espaco-tabela"></div>')  # espaço para o mini menu da tabela
+        st.dataframe(dados.formatar_tabela(painel.tabela), hide_index=True)
         st.download_button(
             "Baixar CSV", data=dados.csv_bytes(painel.tabela),
             file_name="indicadores_mercado.csv", mime="text/csv",

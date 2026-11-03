@@ -6,6 +6,7 @@ from datetime import datetime
 import pandas as pd
 
 from dashboard import formatos as fmt
+from src import config
 from src import indicadores as ind
 from src import load
 
@@ -124,12 +125,12 @@ def construir_painel(
     if ibov.empty:
         raise ValueError("O Ibovespa só tem dia parcial; rode o pipeline após o fechamento.")
 
-    # "Dados até";  a data mais antiga entre as últimas das séries diárias.
+    # "Dados até": a data mais antiga entre as últimas das séries diárias.
     # Até ela, TODAS as séries têm dado; cada cartão mostra a própria data.
     dados_ate = min(cdi["data"].max(), dolar["data"].max(), ibov["data"].max())
     inicio = inicio_do_periodo(dados_ate, periodo)
 
-    # ---------- Cartões ----------
+    # Cartões
     ipca_12m = ind.ipca_acumulado_12m(ipca)
     cdi_dia = float(cdi["cdi"].iloc[-1])
     cartao_cdi = Cartao(
@@ -212,7 +213,7 @@ def construir_painel(
     except ValueError:  # nenhum IPCA divulgado dentro do período
         ipca_pontos = None
 
-    # Juros reais 
+    # Juros reais
     cdi_12m = ind.cdi_acumulado_12m(cdi)
     ipca_12m_fim = ipca_12m.assign(data=ipca_12m["data"] + pd.offsets.MonthEnd(0))
     inicio_juros = min(
@@ -221,7 +222,7 @@ def construir_painel(
     ganho = None
     mes_ref = None
     if not ipca_12m.empty and not cdi_12m.empty:
-        # Compara o MESMO período; CDI de 12 meses até o fim do mês do último IPCA.
+        # Compara o MESMO período: CDI de 12 meses até o fim do mês do último IPCA.
         fim_do_mes = ipca_12m_fim["data"].iloc[-1]
         cdi_ate_la = cdi_12m[cdi_12m["data"] <= fim_do_mes]
         if not cdi_ate_la.empty:
@@ -236,7 +237,7 @@ def construir_painel(
         mes_ref,
     )
 
-    # Câmbio e Ibovespa 
+    # Câmbio e Ibovespa
     cambio = dolar[dolar["data"] >= inicio].reset_index(drop=True)
     ibov_painel = ibov[ibov["data"] >= inicio][["data", "fechamento", "volume", "divergente"]].copy()
     if ocultar_divergentes:
@@ -266,6 +267,14 @@ def construir_painel(
     )
 
 
+def _texto_divergencia(data, divergente) -> str:
+    """'' se o dia está normal; senão 'sim · B3: 120.568,14' (valor oficial, se conhecido)."""
+    if not divergente:
+        return ""
+    b3 = config.DIAS_DIVERGENTES_IBOVESPA.get(pd.Timestamp(data).date())
+    return "sim" if b3 is None else f"sim · B3: {fmt.numero(b3, 2)}"
+
+
 def _montar_tabela(cdi, dolar, ibov_todo, inicio) -> pd.DataFrame:
     """Todos os dados REAIS do período numa tabela só (sem preencher buracos)."""
     t = cdi[["data", "cdi"]].rename(columns={"cdi": "CDI (% ao dia)"})
@@ -277,13 +286,47 @@ def _montar_tabela(cdi, dolar, ibov_todo, inicio) -> pd.DataFrame:
         columns={"fechamento": "Ibovespa (pontos)", "volume": "Volume (Yahoo Finance)"}
     )
     ibov["Dia parcial"] = ibov["parcial"].map({True: "sim", False: ""})
-    ibov["Difere da B3"] = ibov["divergente"].map({True: "sim", False: ""})
+    ibov["Difere da B3"] = [
+        _texto_divergencia(d, v) for d, v in zip(ibov["data"], ibov["divergente"])
+    ]
     t = t.merge(
         ibov[["data", "Ibovespa (pontos)", "Volume (Yahoo Finance)", "Dia parcial", "Difere da B3"]],
         on="data", how="outer",
     )
+    # Datas em que o Ibovespa não tem linha ficariam com "None" nestas duas colunas de texto.
+    t[["Dia parcial", "Difere da B3"]] = t[["Dia parcial", "Difere da B3"]].fillna("")
     t = t[t["data"] >= inicio].sort_values("data").reset_index(drop=True)
     return t.rename(columns={"data": "Data"})
+
+
+def formatar_tabela(tabela: pd.DataFrame) -> pd.DataFrame:
+    """Versão para EXIBIR na tela (tudo texto, no padrão brasileiro). O CSV usa a original.
+
+    Dois "vazios" diferentes:
+    - 'N/A' = a série tem o dia, mas o dado não veio (ex.: volume do Yahoo);
+    - '—'   = a série não tem linha nesse dia (ex.: feriado numa das fontes).
+    """
+    vazio = "—"
+
+    def numero(valor, casas):
+        return vazio if pd.isna(valor) else fmt.numero(valor, casas)
+
+    tem_ibov = tabela["Ibovespa (pontos)"].notna()
+    volume = [
+        vazio if not existe else fmt.numero(v, 0)  # fmt.numero devolve 'N/A' se o volume veio vazio
+        for v, existe in zip(tabela["Volume (Yahoo Finance)"], tem_ibov)
+    ]
+    return pd.DataFrame(
+        {
+            "Data": tabela["Data"].dt.strftime("%d/%m/%Y"),
+            "CDI (% ao dia)": [numero(v, 4) for v in tabela["CDI (% ao dia)"]],
+            "Dólar PTAX venda (R$)": [numero(v, 4) for v in tabela["Dólar PTAX venda (R$)"]],
+            "Ibovespa (pontos)": [numero(v, 0) for v in tabela["Ibovespa (pontos)"]],
+            "Volume (Yahoo Finance)": volume,
+            "Dia parcial": tabela["Dia parcial"],
+            "Difere da B3": tabela["Difere da B3"],
+        }
+    )
 
 
 def csv_bytes(tabela: pd.DataFrame) -> bytes:

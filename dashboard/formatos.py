@@ -6,11 +6,11 @@ import pandas as pd
 
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
-SEM_DADO = "N/D"
+SEM_DADO = "N/A"
 
 
 def numero(valor, casas: int = 2) -> str:
-    """1234.5 -> '1.234,50'. Valor vazio vira 'N/D'."""
+    """1234.5 -> '1.234,50'. Valor vazio vira 'N/A'."""
     if valor is None or pd.isna(valor):
         return SEM_DADO
     texto = f"{float(valor):,.{casas}f}"  # formato inglês: 1,234.50
@@ -48,8 +48,7 @@ def rotulos_eixo(datas, quantidade: int = 6):
     """Escolhe `quantidade` datas bem espaçadas (incluindo a primeira e a última)
     e devolve (posicoes, textos) para o eixo X.
 
-    Existe porque o Plotly escreveria os meses em inglês; assim escrevemos em português.
-    """
+    Existe porque o Plotly escreveria os meses em inglês; assim escrevemos em português."""
     unicas = pd.DatetimeIndex(pd.Series(datas).dropna().unique()).sort_values()
     if len(unicas) == 0:
         return [], []

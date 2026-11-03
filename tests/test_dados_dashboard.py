@@ -193,7 +193,7 @@ def test_tabela_mostra_valor_original_mesmo_no_dia_divergente():
     dia = dados["ibovespa"].loc[200, "data"]
     t = d.construir_painel(dados, "5A").tabela
     linha = t[t["Data"] == dia].iloc[0]
-    assert not pd.isna(linha["Ibovespa (pontos)"]) and linha["Difere da B3"] == "sim"
+    assert not pd.isna(linha["Ibovespa (pontos)"]) and linha["Difere da B3"].startswith("sim")
 
 
 def test_tabela_tem_so_dados_reais_e_sinaliza():
@@ -208,7 +208,7 @@ def test_tabela_tem_so_dados_reais_e_sinaliza():
 def test_csv_para_excel_brasileiro():
     p = d.construir_painel(_dados(), "1M")
     bruto = d.csv_bytes(p.tabela)
-    assert bruto.startswith(b"\xef\xbb\xbf")  # BOM: o Excel reconhece os acentos
+    assert bruto.startswith(b"\xef\xbb\xbf")
     texto = bruto.decode("utf-8-sig")
     primeira, segunda = texto.splitlines()[:2]
     assert primeira.startswith("Data;CDI (% ao dia);Dólar PTAX venda (R$)")
@@ -248,3 +248,40 @@ def test_ler_dados_do_banco_em_memoria():
     p = d.construir_painel(lido, "12M", ultima_execucao=datetime(2026, 11, 3, 13, 46))
     assert p.cartoes[3].referencia.endswith("parcial 13:46")
     assert p.comparativo.iloc[0].tolist() == pytest.approx([100, 100, 100])
+
+
+def test_tabela_mostra_valor_da_b3_no_dia_divergente_conhecido():
+    from src import config
+
+    dia, b3 = next(iter(config.DIAS_DIVERGENTES_IBOVESPA.items()))  # 10/11/2023
+    base = _dados()
+    base["ibovespa"].loc[200, "data"] = pd.Timestamp(dia)  # coloca o dia conhecido na base
+    base["cdi"].loc[200, "data"] = pd.Timestamp(dia)
+    base["dolar_ptax"].loc[200, "data"] = pd.Timestamp(dia)
+    base["ibovespa"].loc[200, "divergente"] = True
+    t = d.construir_painel(base, "5A").tabela
+    assert t.loc[t["Data"] == pd.Timestamp(dia), "Difere da B3"].iloc[0] == "sim · B3: 120.568,14"
+
+
+def test_tabela_nao_tem_valores_nulos_nas_colunas_de_texto():
+    dados = _dados()
+    dados["ibovespa"] = dados["ibovespa"].drop(index=50).reset_index(drop=True)  # dia sem Ibovespa
+    t = d.construir_painel(dados, "5A").tabela
+    assert not t["Dia parcial"].isna().any() and not t["Difere da B3"].isna().any()
+
+
+def test_formatar_tabela_padrao_brasileiro_e_dois_tipos_de_vazio():
+    dados = _dados()
+    dia_sem_volume = dados["ibovespa"].loc[100, "data"]  # existe, mas o volume veio vazio
+    dia_sem_ibov = dados["ibovespa"].loc[50, "data"]
+    dados["ibovespa"] = dados["ibovespa"].drop(index=50).reset_index(drop=True)
+    painel = d.construir_painel(dados, "5A")
+    f = d.formatar_tabela(painel.tabela)
+    por_data = f.set_index("Data")
+
+    assert f["Data"].iloc[0].count("/") == 2  # dd/mm/aaaa, sem horário
+    assert por_data.loc[dia_sem_volume.strftime("%d/%m/%Y"), "Volume (Yahoo Finance)"] == "N/A"
+    linha = por_data.loc[dia_sem_ibov.strftime("%d/%m/%Y")]
+    assert linha["Ibovespa (pontos)"] == "—" and linha["Volume (Yahoo Finance)"] == "—"
+    assert por_data["CDI (% ao dia)"].iloc[0] == "0,0500"
+    assert not f.isin(["None", "nan", "NaN", "<NA>"]).any().any()

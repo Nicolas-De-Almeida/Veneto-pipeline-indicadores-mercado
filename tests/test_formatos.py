@@ -12,16 +12,16 @@ def test_numero_padrao_brasileiro():
 
 
 def test_numero_vazio_vira_nd():
-    assert fmt.numero(None) == "N/D"
-    assert fmt.numero(float("nan")) == "N/D"
-    assert fmt.numero(pd.NA) == "N/D"
+    assert fmt.numero(None) == "N/A"
+    assert fmt.numero(float("nan")) == "N/A"
+    assert fmt.numero(pd.NA) == "N/A"
 
 
 def test_percentual_com_e_sem_sinal():
     assert fmt.percentual(4.58) == "4,58%"
     assert fmt.percentual(2.05, 2, com_sinal=True) == "+2,05%"
     assert fmt.percentual(-0.5, 2, com_sinal=True) == "-0,50%"
-    assert fmt.percentual(None) == "N/D"
+    assert fmt.percentual(None) == "N/A"
 
 
 def test_datas_em_portugues():

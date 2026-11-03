@@ -35,11 +35,11 @@ def cabecalho(painel, logo_b64: str | None) -> str:
     execucao = ""
     if painel.ultima_execucao is not None:
         execucao = (
-            f'<div class="vf-status-nota">Pipeline executado em '
+            f'<div class="vf-status-nota">Última execução do pipeline: '
             f'{_seguro(painel.ultima_execucao.strftime("%d/%m/%Y %H:%M"))}</div>'
         )
     return _linha_unica(f"""
-        <div class="vf-header">
+        <div class="vf-header"><div class="vf-header-inner">
             {logo}
             <div class="vf-header-meio">
                 <div class="vf-eyebrow">{_seguro(tema.EYEBROW)}</div>
@@ -51,7 +51,7 @@ def cabecalho(painel, logo_b64: str | None) -> str:
                 <div class="vf-status-data">Dados até {_seguro(fmt.data_br(painel.dados_ate))}</div>
                 {execucao}
             </div>
-        </div>
+        </div></div>
     """)
 
 
@@ -113,11 +113,11 @@ def rodape_painel(texto: str) -> str:
 
 def rodape(autor: str, fontes: str) -> str:
     return _linha_unica(f"""
-        <div class="vf-rodape">
+        <div class="vf-rodape"><div class="vf-rodape-inner">
             <div>
                 <div class="vf-rodape-rotulo">FONTES</div>
                 <div class="vf-rodape-texto">{_seguro(fontes)}</div>
             </div>
             <div class="vf-rodape-texto vf-rodape-autor">Case técnico desenvolvido por <b>{_seguro(autor)}</b></div>
-        </div>
+        </div></div>
     """)

@@ -1,8 +1,7 @@
 """Identidade visual do dashboard.
-Mudar a aparência = mexer só aqui e nos gráficos.
-"""
+Mudar a aparência = mexer só aqui e nos gráficos."""
 
-# Cores 
+# Cores
 NAVY = "#101A2E"          # azul-marinho: cabeçalho, rodapé, Ibovespa
 OURO = "#A67C00"          # dourado escuro: legível sobre fundo branco (CDI)
 OURO_CLARO = "#C9AA5E"    # dourado claro: textos sobre o fundo marinho
@@ -13,34 +12,59 @@ GRADE = "#E5E7EB"         # linhas de grade
 POSITIVO = "#3D6B4F"      # variação positiva
 NEGATIVO = "#A33B3B"      # variação negativa
 
-# Textos fixos 
+# Textos fixos
 EYEBROW = "VÊNETO FAMILY OFFICE"
 TITULO = "Indicadores de Mercado"
 SUBTITULO = "CDI · IPCA · Dólar · Ibovespa"
-AUTOR = "Nicolas De Almeida"  # ;)
+AUTOR = "Nicolas De Almeida"  # aparece no rodapé; troque se quiser
 FONTES = "Banco Central – SGS · IBGE · Yahoo Finance"
 
-# Logo 
+# Logo
 ALTURA_LOGO_PX = 56  # a logo é azul-marinho; no cabeçalho marinho ela vira branca (filtro CSS)
+
+# Layout
+LARGURA_MAX_PX = 1440  # largura máxima do conteúdo
 
 CSS = f"""
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=EB+Garamond:wght@400;500&display=swap');
 
-html, body, [class*="st-"], .stApp {{ font-family: 'DM Sans', system-ui, -apple-system, sans-serif; }}
+:root {{ --vf-largura: {LARGURA_MAX_PX}px; }}
+
+/* A fonte é aplicada só a elementos de TEXTO. Não usamos um seletor genérico porque os
+   ícones do Streamlit (setas etc.) são letras de uma fonte especial de ícones: se a fonte
+   de texto os atingir, aparece o NOME do ícone escrito (ex.: keyboard_arrow_down). */
+html, body, .stApp, .stApp p, .stApp label, .stApp button, .stApp summary, .stApp li,
+.stApp input, .stApp textarea, .stApp select {{
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+}}
 .stApp {{ background: #FFFFFF; color: {NAVY}; }}
 
-/* some com o menu/cabeçalho padrão do Streamlit */
+/* some com o menu/cabeçalho padrão do Streamlit (o mini menu das tabelas continua visível) */
 #MainMenu, footer, header[data-testid="stHeader"], [data-testid="stToolbar"] {{ display: none !important; }}
+
+/* espaço acima da tabela de dados, onde aparece o mini menu (ver, baixar, buscar, tela cheia) */
+.vf-espaco-tabela {{ height: 1.6rem; }}
+
+/* evita barra de rolagem horizontal causada pelo cabeçalho/rodapé de borda a borda */
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {{ overflow-x: hidden !important; }}
+
+/* conteúdo: largura máxima, margens laterais pequenas e SEM espaço em cima/embaixo */
 .block-container, [data-testid="stMainBlockContainer"] {{
-    max-width: 1240px; padding-top: 1.2rem; padding-bottom: 2rem;
+    max-width: var(--vf-largura) !important;
+    padding: 0 2rem 0 2rem !important;
 }}
+[data-testid="stMain"], section.main {{ padding-top: 0 !important; }}
 
 .vf-serif {{ font-family: 'EB Garamond', Georgia, 'Times New Roman', serif; }}
 
-/* cabeçalho */
+/* cabeçalho*/
 .vf-header {{
-    background: {NAVY}; color: #fff; display: flex; align-items: center;
-    gap: 28px; padding: 22px 32px; border-bottom: 3px solid {OURO_CLARO}; margin-bottom: 22px;
+    background: {NAVY}; color: #fff; border-bottom: 3px solid {OURO_CLARO};
+    width: 100vw; margin: 0 0 8px calc(50% - 50vw);
+}}
+.vf-header-inner {{
+    display: flex; align-items: center; gap: 28px; box-sizing: border-box;
+    max-width: var(--vf-largura); margin: 0 auto; padding: 22px 2rem;
 }}
 .vf-logo {{ height: {ALTURA_LOGO_PX}px; width: auto; filter: brightness(0) invert(1); }}
 .vf-header-meio {{ flex: 1; border-left: 1px solid rgba(255,255,255,.18); padding-left: 28px; }}
@@ -55,7 +79,7 @@ html, body, [class*="st-"], .stApp {{ font-family: 'DM Sans', system-ui, -apple-
 .vf-nota-periodo {{ text-align: right; color: {CINZA}; font-size: 14px; padding-top: 8px; }}
 .vf-nota-periodo b {{ color: {NAVY}; }}
 
-/* cartões  */
+/* cartões */
 .vf-cartoes {{ display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid {GRADE};
     border-bottom: 1px solid {GRADE}; margin: 14px 0 24px 0; }}
 .vf-cartao {{ padding: 18px 22px; border-right: 1px solid {GRADE}; }}
@@ -81,8 +105,11 @@ html, body, [class*="st-"], .stApp {{ font-family: 'DM Sans', system-ui, -apple-
 .vf-rodape-painel {{ color: {CINZA}; font-size: 13px; border-top: 1px solid {GRADE}; padding-top: 8px; margin-top: 4px; }}
 
 /* rodapé */
-.vf-rodape {{ background: {NAVY}; color: #fff; display: flex; justify-content: space-between;
-    align-items: flex-end; gap: 20px; padding: 24px 32px; margin-top: 26px; }}
+.vf-rodape {{ background: {NAVY}; color: #fff; width: 100vw; margin: 26px 0 0 calc(50% - 50vw); }}
+.vf-rodape-inner {{
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; box-sizing: border-box;
+    max-width: var(--vf-largura); margin: 0 auto; padding: 24px 2rem;
+}}
 .vf-rodape-rotulo {{ color: {OURO_CLARO}; letter-spacing: .2em; font-size: 12px; font-weight: 500; }}
 .vf-rodape-texto {{ color: rgba(255,255,255,.8); font-size: 14px; margin-top: 6px; }}
 .vf-rodape-autor b {{ color: #fff; }}
@@ -91,7 +118,12 @@ html, body, [class*="st-"], .stApp {{ font-family: 'DM Sans', system-ui, -apple-
 
 @media (max-width: 900px) {{
     .vf-cartoes {{ grid-template-columns: repeat(2, 1fr); }}
-    .vf-header, .vf-rodape {{ flex-direction: column; align-items: flex-start; }}
+    .vf-header-inner, .vf-rodape-inner {{ flex-direction: column; align-items: flex-start; }}
     .vf-status {{ text-align: left; border-left: none; padding-left: 0; }}
 }}
 """
+
+
+def css_em_uma_linha() -> str:
+    """O CSS numa linha só, pronto para ir dentro de <style> no st.markdown"""
+    return " ".join(linha.strip() for linha in CSS.splitlines())

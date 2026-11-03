@@ -34,13 +34,13 @@ def test_texto_nao_vira_html():
 def test_cabecalho_mostra_data_e_execucao():
     html = c.cabecalho(_painel(), None)
     assert "Dados até 30/10/2026" in html
-    assert "Pipeline executado em 02/11/2026 13:46" in html
+    assert "Última execução do pipeline: 02/11/2026 13:46" in html
     assert "<img" not in html  # sem logo
 
 
 def test_cabecalho_sem_execucao_e_com_logo():
     html = c.cabecalho(_painel(None), "QUJD")
-    assert "Pipeline executado" not in html
+    assert "Última execução do pipeline" not in html
     assert 'src="data:image/png;base64,QUJD"' in html
 
 
