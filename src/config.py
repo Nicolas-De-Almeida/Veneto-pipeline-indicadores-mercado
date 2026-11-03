@@ -28,3 +28,9 @@ DIAS_DIVERGENTES_IBOVESPA = {date(2023, 11, 10): 120568.14} # hmm
 
 # Banco fica na raiz do projeto.
 CAMINHO_BANCO = Path(__file__).resolve().parent.parent / "data" / "mercado.db"
+
+
+# CDI e IPCA acumulados em 12 meses precisam de 12 meses ANTES do começo da
+# janela mostrada; por isso baixei 1 ano extra só dessas duas séries.
+ANOS_EXTRAS_12M = 1
+SERIES_COM_ANO_EXTRA = ("cdi", "ipca")
