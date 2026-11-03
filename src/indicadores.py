@@ -83,16 +83,20 @@ def ipca_acumulado_12m(ipca: pd.DataFrame) -> pd.DataFrame:
 def ipca_indice_base100(ipca: pd.DataFrame, data_inicio) -> pd.DataFrame:
     """Índice do IPCA com base 100 em `data_inicio`.
     Linha âncora em `data_inicio` ( = 100); cada mês entra na data do FIM do mês
-    (a inflação do mês só está completa ali). Meses antes do início são ignorados."""
+    (a inflação do mês só está completa ali). Só entram meses que TERMINAM
+    DEPOIS da data de início; a inflação de um mês que acabou antes do início
+    já aconteceu e não pertence ao período. (Se o início cai no meio de um
+    mês, esse mês entra inteiro; é uma aproximação, porque o IPCA é mensal.)"""
     data_inicio = pd.Timestamp(data_inicio)
-    mes_inicio = data_inicio.replace(day=1)
-    meses = ipca[ipca["data"] >= mes_inicio].sort_values("data")
+    fim_mes = ipca["data"] + pd.offsets.MonthEnd(0)
+    meses = ipca[fim_mes > data_inicio].sort_values("data")
     if meses.empty:
         raise ValueError("IPCA sem meses a partir da data de início.")
-    fim_mes = meses["data"] + pd.offsets.MonthEnd(0)
     indice = 100 * (1 + meses["ipca"] / 100).cumprod()
     ancora = pd.DataFrame({"data": [data_inicio], "indice": [100.0]})
-    resto = pd.DataFrame({"data": fim_mes.values, "indice": indice.values})
+    resto = pd.DataFrame(
+        {"data": (meses["data"] + pd.offsets.MonthEnd(0)).values, "indice": indice.values}
+    )
     return pd.concat([ancora, resto], ignore_index=True)
 
 

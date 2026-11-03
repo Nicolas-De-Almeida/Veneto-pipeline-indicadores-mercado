@@ -92,6 +92,12 @@ def test_ipca_indice_ancora_e_fim_de_mes():
     assert r["data"].iloc[1] == pd.Timestamp("2025-01-31")
     assert r["indice"].iloc[-1] == pytest.approx(100 * 1.01**3)
 
+def test_ipca_indice_mes_que_terminou_antes_do_inicio_fica_de_fora():
+    # início = 31/01; o IPCA de janeiro terminou nesse dia e não entra
+    r = ind.ipca_indice_base100(_ipca(3), "2025-01-31")
+    assert len(r) == 3  # âncora + fev + mar
+    assert r["indice"].iloc[-1] == pytest.approx(100 * 1.01**2)
+    assert r["data"].is_monotonic_increasing and r["data"].is_unique
 
 def test_ipca_indice_sem_meses_gera_erro():
     with pytest.raises(ValueError):
