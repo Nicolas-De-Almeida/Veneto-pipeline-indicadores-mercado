@@ -35,7 +35,7 @@ def _base(fig: go.Figure, datas, altura: int, direita: int = 70) -> go.Figure:
         showgrid=False,
         linecolor=tema.GRADE,
         tickmode="array",
-        tickvals=_como_datetime(posicoes),
+        tickvals=_como_datetime(fmt.afastar_rotulos(posicoes)),
         ticktext=textos,
         hoverformat="%d/%m/%Y",
     )

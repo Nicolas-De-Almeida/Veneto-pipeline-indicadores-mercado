@@ -55,3 +55,13 @@ def rotulos_eixo(datas, quantidade: int = 6):
     posicoes = np.unique(np.linspace(0, len(unicas) - 1, min(quantidade, len(unicas))).round().astype(int))
     escolhidas = [unicas[i] for i in posicoes]
     return escolhidas, [mes_ano_curto(d) for d in escolhidas]
+
+def afastar_rotulos(posicoes) -> list:
+    """Move cada rótulo do eixo X meio para dentro, saindo de cima dos dados.
+    """
+    meio_dia = pd.Timedelta(hours=12)
+    ultimo = len(posicoes) - 1
+    return [
+        pd.Timestamp(d) - meio_dia if (i == ultimo and ultimo > 0) else pd.Timestamp(d) + meio_dia
+        for i, d in enumerate(posicoes)
+    ]
