@@ -43,3 +43,19 @@ def test_rotulos_eixo_poucas_datas_e_vazio():
     pos, textos = fmt.rotulos_eixo(pd.to_datetime(["2026-01-05", "2026-01-06"]), 6)
     assert len(pos) == 2
     assert fmt.rotulos_eixo([], 6) == ([], [])
+
+def test_afastar_rotulos_nunca_coincide_com_um_dia_de_dado():
+    """Se coincidisse, o balão do gráfico mostraria 'nov de 26' em vez de '03/11/2026'."""
+    datas = pd.bdate_range("2021-11-03", "2026-11-03")
+    pos, _ = fmt.rotulos_eixo(datas, 6)
+    novos = fmt.afastar_rotulos(pos)
+    assert len(novos) == len(pos)
+    for novo in novos:
+        assert min(abs(novo - d) for d in datas) >= pd.Timedelta(hours=11)
+    assert novos[0] > pos[0] and novos[-1] < pos[-1]  # continuam dentro do gráfico
+    assert novos == sorted(novos)
+
+
+def test_afastar_rotulos_vazio_e_um_so():
+    assert fmt.afastar_rotulos([]) == []
+    assert len(fmt.afastar_rotulos([pd.Timestamp("2026-11-03")])) == 1

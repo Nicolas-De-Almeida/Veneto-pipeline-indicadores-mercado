@@ -111,7 +111,12 @@ def ultima_data(conn, tabela: str):
     (maxima,) = conn.execute(f"SELECT MAX(data) FROM {tabela}").fetchone()
     return None if maxima is None else pd.Timestamp(maxima)
  
- 
+def contar_linhas(conn, tabela: str) -> int:
+    """Quantas linhas a tabela tem agora."""
+    _validar_tabela(tabela, TABELAS)
+    (total,) = conn.execute(f"SELECT COUNT(*) FROM {tabela}").fetchone()
+    return int(total)
+
 def registrar_execucao(conn, momento: datetime | None = None) -> str:
     """Guarda quando o pipeline rodou pela última vez (o dashboard vai mostrar isso)."""
     momento = momento or datetime.now()

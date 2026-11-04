@@ -20,6 +20,11 @@ URL_SGS = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.{codigo}/dados"
 # Ticker do Ibovespa no Yahoo Finance (via biblioteca yfinance).
 TICKER_IBOVESPA = "^BVSP"
 
+# Atualização incremental: a cada execução o pipeline baixa só o que falta, começando alguns dias ANTES da última data já gravada. A sobra serve para
+# corrigir dados que mudam depois: o Ibovespa gravado como "parcial" (pregão aberto) e valores revisados pela fonte. 30 dias também cobre o IPCA, que é
+# mensal e tem data no dia 1.
+MARGEM_INCREMENTAL_DIAS = 30
+
 # Dias úteis por ano usados para anualizar o CDI diário (convenção do mercado).
 DIAS_UTEIS_ANO = 252
 

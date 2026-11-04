@@ -108,7 +108,14 @@ def test_ultima_data(conn):
     load.salvar_serie_sgs(conn, "cdi", _cdi(), "cdi")
     assert load.ultima_data(conn, "cdi") == pd.Timestamp("2026-10-29")
 
-
+def test_contar_linhas(conn):
+    assert load.contar_linhas(conn, "cdi") == 0
+    load.salvar_serie_sgs(conn, "cdi", _cdi(), "cdi")
+    load.salvar_serie_sgs(conn, "cdi", _cdi(), "cdi")  # repetir não aumenta
+    assert load.contar_linhas(conn, "cdi") == 2
+    with pytest.raises(ValueError):
+        load.contar_linhas(conn, "tabela_inventada")
+        
 def test_execucao_registrada(conn):
     assert load.ler_ultima_execucao(conn) is None
     load.registrar_execucao(conn, datetime(2026, 11, 3, 15, 30, 5))
